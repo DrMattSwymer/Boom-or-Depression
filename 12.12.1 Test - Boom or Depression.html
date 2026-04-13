@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Retirement Simulation Game</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --primary-hover: #1d4ed8;
+      --secondary: #64748b;
+      --bg: #f8fafc;
+      --text: #1e293b;
+      --boom: #16a34a;
+      --bust: #dc2626;
+      --warning-bg: #fef3c7;
+      --warning-text: #b45309;
+      --warning-border: #f59e0b;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      padding-top: 8vh;
+      margin: 0;
+    }
+
+    .container {
+      background: white;
+      max-width: 800px;
+      width: 90%;
+      padding: 50px;
+      border-radius: 16px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+      text-align: center;
+    }
+
+    .screen {
+      display: none;
+      animation: fadeIn 0.4s ease-out forwards;
+    }
+
+    .screen.active {
+      display: block;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      margin-bottom: 20px;
+      color: #0f172a;
+    }
+
+    h2 {
+      font-size: 2rem;
+      color: var(--primary);
+      margin-bottom: 15px;
+    }
+
+    p {
+      font-size: 1.25rem;
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+
+    .scenario-box {
+      background: #f1f5f9;
+      padding: 30px;
+      border-radius: 12px;
+      font-size: 1.5rem;
+      font-weight: 500;
+      margin-bottom: 30px;
+      border-left: 6px solid var(--primary);
+    }
+
+    .outcome-box {
+      font-size: 1.8rem;
+      padding: 30px;
+      border-radius: 12px;
+      margin-bottom: 30px;
+      font-weight: bold;
+    }
+
+    .boom-box { background: #dcfce7; border: 2px solid var(--boom); color: var(--boom); }
+    .bust-box { background: #fee2e2; border: 2px solid var(--bust); color: var(--bust); }
+
+    .bond-warning {
+      font-size: 1.2rem;
+      color: var(--bust);
+      margin-top: 15px;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+
+    .teacher-warning {
+      font-size: 1rem;
+      color: var(--warning-text);
+      background: var(--warning-bg);
+      padding: 15px;
+      border-radius: 8px;
+      display: inline-block;
+      margin: 20px 0;
+      border: 1px solid var(--warning-border);
+      font-weight: bold;
+    }
+
+    button {
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 14px 28px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      margin: 10px;
+      transition: all 0.2s;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    button:hover {
+      background: var(--primary-hover);
+      transform: translateY(-2px);
+    }
+
+    button.secondary {
+      background: var(--secondary);
+    }
+
+    button.secondary:hover {
+      background: #475569;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(15px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    
+    <div id="screen-intro" class="screen active">
+      <h1>Retirement Simulation Game</h1>
+      <p>Navigate the unpredictable global economy across four decades. Will you play it safe, or risk it all for massive returns?</p>
+      <button onclick="nextScreen()">Start Game</button>
+    </div>
+
+    <div id="screen-instructions" class="screen">
+      <h2>Game Rules</h2>
+      <p>You have <b>$600 per month</b> to invest. Allocate your funds across four profiles:</p>
+      <ul style="text-align: left; font-size: 1.2rem; display: inline-block; margin-bottom: 20px;">
+        <li><b>Under the Mattress:</b> 0% return (Total safety)</li>
+        <li><b>Savings Account:</b> 0.05% return (Near total safety)</li>
+        <li><b>Bonds:</b> 3.0% return (Moderate risk: high depressions may wipe them out)</li>
+        <li><b>Mutual Funds:</b> Highly variable (Tied directly to global economic booms and busts)</li>
+      </ul>
+      <p>Lock in your choices before the market outcome is revealed!</p>
+      <button class="secondary" onclick="prevScreen()">Back</button>
+      <button onclick="nextScreen()">Begin 2030</button>
+    </div>
+
+    <div id="screen-scenario" class="screen">
+      <h2 id="decade-heading">Decade: 2030</h2>
+      <div class="scenario-box" id="scenario-text">Loading scenario...</div>
+      
+      <div class="teacher-warning">
+        ⚠️ TEACHER: Pause here. Do not proceed until all students have submitted their allocations.
+      </div>
+      <br>
+      <button class="secondary" onclick="prevScreen()">Back</button>
+      <button onclick="revealOutcome()">Reveal Market Outcome</button>
+    </div>
+
+    <div id="screen-outcome" class="screen">
+      <h2>Market Results</h2>
+      <div id="outcome-box" class="outcome-box">
+        <div id="outcome-title">BOOM!</div>
+        <div id="outcome-rate">Mutual Funds Return: +8.5%</div>
+        <div id="outcome-bonds" class="bond-warning"></div>
+      </div>
+      <p>Record your interest rate and update your portfolios for the next round.</p>
+      <button class="secondary" onclick="undoReveal()">Back to Scenario (Oops!)</button>
+      <button onclick="nextDecade()">Advance to Next Decade</button>
+    </div>
+
+    <div id="screen-final" class="screen">
+      <h1>Simulation Complete</h1>
+      <p>The 2060 decade has concluded. The Game Master will now calculate the final totals.</p>
+      <p><b>Who survived the market?</b></p>
+      <button onclick="resetGame()">Play Again</button>
+    </div>
+
+  </div>
+
+  <script>
+    const decades = ["2030", "2040", "2050", "2060"];
+    let currentDecadeIndex = 0;
+    
+    // Game history stores rolled results so "Back" button doesn't cheat the system
+    let gameHistory = []; 
+    let scenarioPool = [];
+
+    // Master list of scenarios with weighted probabilities and magnitudes
+    // probGood: chance of being a Boom (1.0 = 100%, 0.5 = 50%)
+    // magnitude: determines the variance limits. high (7-15%), med (3-8%), low (1-4%)
+    const allScenarios = [
+      // Extremely High Probability Good
+      { text: "Breakthroughs in commercial nuclear fusion provide cheap, limitless energy.", probGood: 0.90, magnitude: "high" },
+      { text: "A major breakthrough in gene therapy cures several prevalent chronic diseases.", probGood: 0.85, magnitude: "med" },
+      { text: "Global transition to a 4-day workweek unexpectedly spikes overall corporate productivity.", probGood: 0.80, magnitude: "med" },
+      { text: "A historic peace treaty is signed between two heavily armed global superpowers.", probGood: 0.85, magnitude: "med" },
+      { text: "A massive global infrastructure initiative creates millions of well-paying jobs.", probGood: 0.75, magnitude: "med" },
+      { text: "Quantum computing solves massive supply chain bottlenecks overnight.", probGood: 0.80, magnitude: "high" },
+      
+      // Leaning Good but Volatile
+      { text: "Commercially viable asteroid mining brings an influx of rare earth metals.", probGood: 0.70, magnitude: "high" },
+      { text: "A new consumer tech trend causes a massive boom in the electronics sector, but drains rare resources.", probGood: 0.65, magnitude: "med" },
+      { text: "Rising global temperatures open up new, highly efficient shipping routes in the Arctic.", probGood: 0.60, magnitude: "med" },
+      { text: "Sweeping reduction in international tariffs heavily promotes free trade.", probGood: 0.70, magnitude: "low" },
+      { text: "Widespread adoption of high-yield vertical farming stabilizes global food prices.", probGood: 0.75, magnitude: "low" },
+      { text: "A sudden, massive drop in global oil prices.", probGood: 0.60, magnitude: "med" },
+
+      // True 50/50 Ambiguous & Wildcards (High risk, high reward)
+      { text: "Artificial Intelligence successfully automates 40% of white-collar jobs globally.", probGood: 0.50, magnitude: "high" },
+      { text: "Cryptocurrency officially becomes the primary reserve currency for three major nations.", probGood: 0.50, magnitude: "high" },
+      { text: "First verifiable contact with extraterrestrial intelligence is confirmed.", probGood: 0.50, magnitude: "high" },
+      { text: "A major election results in a radical shift in corporate tax laws.", probGood: 0.45, magnitude: "high" },
+      { text: "A cheap, perfect synthetic alternative to gold and diamonds hits the market.", probGood: 0.50, magnitude: "high" },
+      { text: "Anti-aging treatments are perfected, extending the average working life by 30 years.", probGood: 0.50, magnitude: "high" },
+      { text: "Major world governments hand over fiscal policy control entirely to advanced AI algorithms.", probGood: 0.50, magnitude: "high" },
+      { text: "A massive, international effort begins to privatize ocean territories.", probGood: 0.50, magnitude: "med" },
+      { text: "Universal Basic Income (UBI) is rolled out across North America and Europe.", probGood: 0.50, magnitude: "high" },
+      { text: "Teleportation of non-living matter is successfully commercialized for freight.", probGood: 0.60, magnitude: "high" },
+
+      // Leaning Bad but Modest
+      { text: "A political scandal leads to the simultaneous resignation of multiple world leaders.", probGood: 0.30, magnitude: "med" },
+      { text: "A widespread drought affects water supplies for major manufacturing hubs.", probGood: 0.25, magnitude: "med" },
+      { text: "A massive corporate monopoly is forcefully broken up by international courts.", probGood: 0.40, magnitude: "med" },
+      { text: "A severe generational shift in consumer habits crashes the luxury goods market.", probGood: 0.35, magnitude: "low" },
+      { text: "A sudden housing market correction erases 15% of property values nationwide.", probGood: 0.30, magnitude: "med" },
+      { text: "A new strain of crop blight moderately reduces global wheat and corn yields.", probGood: 0.25, magnitude: "low" },
+      
+      // Extremely High Probability Bad
+      { text: "A sudden, unexplained spike in global inflation hits 12%.", probGood: 0.15, magnitude: "high" },
+      { text: "A massive natural disaster devastates a key global agricultural region.", probGood: 0.15, magnitude: "med" },
+      { text: "War breaks out in a resource-rich region, severely disrupting global trade.", probGood: 0.10, magnitude: "high" },
+      { text: "A highly contagious pathogen leads to widespread economic shutdowns.", probGood: 0.05, magnitude: "high" },
+      { text: "A severe cyberattack permanently erases 5% of global banking records.", probGood: 0.05, magnitude: "high" },
+      { text: "A major financial institution collapses under the weight of hidden bad debts.", probGood: 0.10, magnitude: "high" },
+      { text: "A 'Carrington Event' level solar flare destroys crucial satellite infrastructure.", probGood: 0.02, magnitude: "high" },
+      { text: "Kessler Syndrome triggers, trapping Earth in space debris and halting space commerce.", probGood: 0.15, magnitude: "med" },
+      { text: "A coordinated global cyber-heist paralyzes central banks for a week.", probGood: 0.05, magnitude: "high" },
+      { text: "The collapse of a major ocean current dramatically shifts weather patterns, destroying coastal real estate.", probGood: 0.10, magnitude: "high" },
+      { text: "A severe shortage of semiconductor chips completely halts global automotive and tech manufacturing.", probGood: 0.15, magnitude: "high" }
+    ];
+
+    function shuffleArray(array) {
+      let shuffled = [...array];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled;
+    }
+
+    function initGame() {
+      scenarioPool = shuffleArray(allScenarios);
+      gameHistory = [];
+      currentDecadeIndex = 0;
+    }
+
+    function switchScreen(hideId, showId) {
+      document.getElementById(hideId).classList.remove("active");
+      document.getElementById(showId).classList.add("active");
+    }
+
+    function nextScreen() {
+      if (document.getElementById('screen-intro').classList.contains('active')) {
+        switchScreen('screen-intro', 'screen-instructions');
+      } else if (document.getElementById('screen-instructions').classList.contains('active')) {
+        loadScenario();
+        switchScreen('screen-instructions', 'screen-scenario');
+      }
+    }
+
+    function prevScreen() {
+      if (document.getElementById('screen-instructions').classList.contains('active')) {
+        switchScreen('screen-instructions', 'screen-intro');
+      } else if (document.getElementById('screen-scenario').classList.contains('active')) {
+        switchScreen('screen-scenario', 'screen-instructions');
+      }
+    }
+
+    function loadScenario() {
+      document.getElementById("decade-heading").innerText = "Decade: " + decades[currentDecadeIndex];
+      
+      // Generate the outcome NOW, but don't show it. This prevents cheating via the "Back" button.
+      if (!gameHistory[currentDecadeIndex]) {
+        const scenario = scenarioPool.pop();
+        
+        // Determine Boom or Bust based on weighted probability
+        const isBoom = Math.random() < scenario.probGood;
+        
+        // Calculate interest rate based on magnitude variance
+        let rate = 0;
+        if (scenario.magnitude === 'high') rate = (Math.random() * 8 + 7); // 7.0 to 15.0
+        else if (scenario.magnitude === 'med') rate = (Math.random() * 5 + 3); // 3.0 to 8.0
+        else rate = (Math.random() * 3 + 1); // 1.0 to 4.0
+
+        // Apply negative sign if it's a depression
+        rate = isBoom ? rate : -rate;
+        
+        // Calculate Bond Loss (Only happens during Depressions with High magnitude - 40% chance)
+        let bondLoss = false;
+        if (!isBoom && scenario.magnitude === 'high' && Math.random() < 0.40) {
+          bondLoss = true;
+        }
+
+        // Save to history lock
+        gameHistory[currentDecadeIndex] = {
+          text: scenario.text,
+          isBoom: isBoom,
+          rate: rate.toFixed(1),
+          bondLoss: bondLoss
+        };
+      }
+
+      // Display the locked text
+      document.getElementById("scenario-text").innerText = gameHistory[currentDecadeIndex].text;
+    }
+
+    function revealOutcome() {
+      const result = gameHistory[currentDecadeIndex];
+      const outcomeBox = document.getElementById("outcome-box");
+      const title = document.getElementById("outcome-title");
+      const rateText = document.getElementById("outcome-rate");
+      const bondText = document.getElementById("outcome-bonds");
+
+      if (result.isBoom) {
+        outcomeBox.className = "outcome-box boom-box";
+        title.innerText = "ECONOMIC BOOM!";
+        rateText.innerText = `Mutual Funds Return: +${result.rate}%`;
+        bondText.innerText = ""; // Bonds are safe
+      } else {
+        outcomeBox.className = "outcome-box bust-box";
+        title.innerText = "ECONOMIC DEPRESSION!";
+        rateText.innerText = `Mutual Funds Return: ${result.rate}%`;
+        
+        if (result.bondLoss) {
+          bondText.innerText = "CRITICAL FAILURE: All Bond Investments Lost!";
+        } else {
+          bondText.innerText = "Bonds survived the downturn safely.";
+        }
+      }
+
+      switchScreen('screen-scenario', 'screen-outcome');
+    }
+
+    function undoReveal() {
+      switchScreen('screen-outcome', 'screen-scenario');
+    }
+
+    function nextDecade() {
+      currentDecadeIndex++;
+      if (currentDecadeIndex < decades.length) {
+        loadScenario();
+        switchScreen('screen-outcome', 'screen-scenario');
+      } else {
+        switchScreen('screen-outcome', 'screen-final');
+      }
+    }
+
+    function resetGame() {
+      initGame();
+      switchScreen('screen-final', 'screen-intro');
+    }
+
+    // Initialize game on load
+    window.onload = initGame;
+
+  </script>
+</body>
+</html>
